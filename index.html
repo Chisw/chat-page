@@ -1,0 +1,299 @@
+<html>
+<head>
+<title>CHATPAGE</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+#iframe {
+  position: absolute;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chat-container {
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 10;
+  right: 20px;
+  bottom: 10px;
+  width: 400px;
+  height: 60vh;
+  background: #f1f1f1;
+  transition: all .23s;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 32px rgba(0, 0, 0, .6);
+}
+
+.chat-container:hover {
+  opacity: 100;
+}
+
+.chat-setting {
+  flex-shrink: 0;
+  height: 24px;
+  border-bottom: 1px solid #ddd;
+}
+
+.chat-setting input {
+  height: 12px;
+  padding: 4px 8px;
+  width: 100%;
+  height: 100%;
+  opacity: 60%;
+}
+
+.chat-content {
+  flex-grow: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.chat-form {
+  position: relative;
+  z-index: 10;
+  border-top: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.chat-form-input {
+  width: 100%;
+  padding: 12px 12px;
+}
+
+.chat-form-input:focus {
+  outline: 2px solid #4dbc2e;
+}
+
+.bubble {
+  display: flex;
+  margin-top: 20px;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: #dfdfdf;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.bubble-text {
+  margin-left: 12px;
+  margin-right: 52px;
+}
+
+.bubble-text-name {
+  margin-bottom: 2px;
+  color: #8A878A;
+  font-size: 12px;
+}
+
+.bubble-text-content {
+  display: inline-block;
+  position: relative;
+  padding: 8px 14px;
+  background: #fff;
+  border-radius: 4px;
+  font-weight: 400;
+  line-height: 24px;
+  text-align: justify;
+  word-break: break-all;
+}
+
+.bubble-text-content::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 14px;
+  left: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #fff;
+  transform: rotate(45deg);
+}
+
+.bubble-text-time {
+  display: none;
+  position: absolute;
+  top: -16px;
+  left: 0;
+  width: 120px;
+  font-size: 12px;
+  color: #999;
+  transform: scale(.75);
+  transform-origin: top left;
+  word-break: keep-all;
+}
+
+.bubble-text-content:hover .bubble-text-time {
+  display: block;
+}
+
+.bubble.bubble-right {
+  flex-direction: row-reverse;
+}
+
+.bubble.bubble-right .bubble-text {
+  margin-right: 12px;
+  margin-left: 52px;
+}
+
+.bubble.bubble-right .bubble-text-name {
+  display: none;
+}
+
+.bubble.bubble-right .bubble-text-content {
+  background: #8AED6F;
+}
+
+.bubble.bubble-right .bubble-text-content::before {
+  left: auto;
+  right: -3px;
+  background: #8AED6F;
+}
+
+</style>
+</head>
+<body>
+
+  <iframe
+    src="https://www.csdn.net/"
+    id="iframe"
+  >
+  </iframe>
+
+  <div class="chat-container">
+    <div class="chat-setting">
+      <input
+        type="password"
+        class="auth-code-input"
+        placeholder="Paste auth code here"
+      />
+    </div>
+    <div class="chat-content"></div>
+    <div class="chat-form">
+      <input
+        class="chat-form-input"
+        placeholder="Input here"
+      />
+    </div>
+  </div>
+
+</body>
+<script>
+
+const REFRESH_INTERVAL = 1000
+let LAST_STAMP = 0
+
+const AUTH = {
+  key: 'CHAT_PAGE_AUTH',
+  set: function (val) {
+    localStorage.setItem(this.key, val)
+  },
+  get: function () {
+    return localStorage.getItem(this.key) || ''
+  },
+}
+
+var stringToColor = function(str) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  var color = '#';
+  for (var i = 0; i < 3; i++) {
+    var value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
+}
+
+const elAuthInput = document.querySelector('.auth-code-input')
+const elIframe = document.getElementById('iframe')
+const elInput = document.querySelector('.chat-form-input')
+const elContent = document.querySelector('.chat-content')
+
+elAuthInput.value = AUTH.get()
+
+elAuthInput.addEventListener('input', e => {
+  AUTH.set(e.target.value)
+})
+
+elInput.addEventListener('keyup', e => {
+  if (e.key === 'Enter') {
+    const content = e.target.value.trim()
+    if (!content) return
+
+    elInput.value = ''
+    fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Authorization': AUTH.get(),
+      },
+      body: JSON.stringify({ content }),
+    })
+  }
+})
+
+setInterval(() => {
+  fetch('/chat', {
+    method: 'GET',
+    headers: {
+      'Authorization': AUTH.get(),
+    },
+  })
+    .then(res => res.json())
+    .then(res => {
+      const list = res.list || []
+      const html = list.map(({ timestamp, username, content, isSelf }) => {
+        return username
+          ? `
+            <div class="bubble ${isSelf ? 'bubble-right' : ''}">
+              <div
+                class="user-avatar"
+                style="background-color: ${stringToColor('RANDOM_TEXT' + username)};"
+              >
+                ${username.toUpperCase()}
+              </div>
+              <div class="bubble-text">
+                <div style="display: none;" class="bubble-text-name">${username}</div>
+                <div class="bubble-text-content">
+                  <div class="bubble-text-time">${new Date(timestamp).toLocaleString()}</div>
+                  ${content}
+                </div>
+              </div>
+            </div>
+          `
+          : `<div class="center-text">${content}</div>`
+      }).join('')
+      elContent.innerHTML = html
+
+      const last = list.splice(-1)[0]
+      if (last && last.timestamp !== LAST_STAMP) {
+        LAST_STAMP = last.timestamp
+        elContent.scrollTo({ top: 99999999 })
+      }
+    })
+}, REFRESH_INTERVAL)
+
+</script>
+</html>

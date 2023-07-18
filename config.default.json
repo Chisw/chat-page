@@ -1,0 +1,10 @@
+{
+  "log": true,
+  "maxMinutes": 30,
+  "users": [
+    {
+      "name": "USER",
+      "code": "[btoa(Math.random())]"
+    }
+  ]
+}
