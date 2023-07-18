@@ -185,8 +185,8 @@ html, body {
     <div class="chat-setting">
       <input
         type="password"
-        class="auth-code-input"
-        placeholder="Paste auth code here"
+        class="token-code-input"
+        placeholder="Paste token code here"
       />
     </div>
     <div class="chat-content"></div>
@@ -227,14 +227,14 @@ var stringToColor = function(str) {
   return color;
 }
 
-const elAuthInput = document.querySelector('.auth-code-input')
+const elTokenInput = document.querySelector('.token-code-input')
 const elIframe = document.getElementById('iframe')
 const elInput = document.querySelector('.chat-form-input')
 const elContent = document.querySelector('.chat-content')
 
-elAuthInput.value = AUTH.get()
+elTokenInput.value = AUTH.get()
 
-elAuthInput.addEventListener('input', e => {
+elTokenInput.addEventListener('input', e => {
   AUTH.set(e.target.value)
 })
 
