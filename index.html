@@ -287,9 +287,10 @@ setInterval(() => {
       }).join('')
       elContent.innerHTML = html
 
-      const last = list.splice(-1)[0]
-      if (last && last.timestamp !== LAST_STAMP) {
-        LAST_STAMP = last.timestamp
+      const lastBubble = list.splice(-1)[0]
+      if (lastBubble && lastBubble.timestamp !== LAST_STAMP) {
+        LAST_STAMP = lastBubble.timestamp
+        document.title = `CP ${new Date(lastBubble.timestamp).toLocaleTimeString()}`
         elContent.scrollTo({ top: 99999999 })
       }
     })
